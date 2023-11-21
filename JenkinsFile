@@ -1,0 +1,34 @@
+pipeline{
+    
+    agent any
+    
+    tools{
+        maven 'Maven'
+    }
+    stages{
+        stage('Build Maven'){
+            steps{
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/aditya2305/devops-automation.git']])
+                sh 'mvn clean install'
+            }
+        }
+        stage('Build Docker Image'){
+            steps{
+                script{
+                    sh 'docker build -t aditya230520/devops-automation .'
+                }
+            }
+        }
+        stage('Push Image to Hub'){
+            steps{
+                script{
+                    withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
+                        sh 'echo $dockerhubpwd | docker login -u aditya230520 --password-stdin'
+                        sh 'docker push aditya230520/devops-automation'
+                    }
+                }
+            }
+        }
+    }
+
+}
